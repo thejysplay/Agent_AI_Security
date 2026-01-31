@@ -3,5 +3,14 @@
     "command": "python",
     "args": ["mcp_servers/system_admin_agent/normal/server.py"]
   },
-  "allowed_tools": ["sys_monitor", "update_manager"]
+
+  "allowed_tools": [
+    "sys_monitor",
+    "update_manager"
+  ],
+
+  "allowed_tools_comment": {
+    "sys_monitor": "정상 도구 (normal)",
+    "update_manager": "정상 도구 (normal)"
+  }
 }

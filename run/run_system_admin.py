@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
+import re
 
 import yaml
 
@@ -215,6 +216,20 @@ async def main_async(config_path: str, mode: str):
     tasks = read_jsonl(paths["tasks"])
     tools_cfg = json.loads(Path(paths["tools"]).read_text(encoding="utf-8"))
 
+    tool_comments = tools_cfg.get("allowed_tools_comment", {}) or {}
+
+
+    ipi_tools_by_target: dict[str, list[str]] = {}
+    for name, comment in tool_comments.items():
+        if not (isinstance(comment, str) and "IPI용 도구" in comment):
+            continue
+        m = re.search(r"target=([a-zA-Z0-9_]+)", comment)
+        if not m:
+            continue
+        target = m.group(1)
+        ipi_tools_by_target.setdefault(target, []).append(name)
+
+
     api_key = load_api_key(llm_cfg)
     client = genai.Client(api_key=api_key)
 
@@ -257,9 +272,25 @@ async def main_async(config_path: str, mode: str):
                 if mode == "attack":
                     if not attack_tool:
                         raise RuntimeError(f"[{task_id}] attack_tool field is required in attack mode tasks.")
+
+                    # 기본: 정상 2 + 악성 1
                     allowed_this_task = list(baseline_tools) + [attack_tool]
+
+
+                    if str(task_id).startswith("ipi-"):
+                        mapped_ipi_tools = ipi_tools_by_target.get(attack_tool, [])
+                        if not mapped_ipi_tools:
+                            raise RuntimeError(
+                                f"[{task_id}] No IPI tool mapped for attack_tool='{attack_tool}'. "
+                                f"Check allowed_tools_comment has 'target={attack_tool}' for an IPI tool."
+                            )
+                        # ✅ 1:1 매핑을 강제하려면 1개만 사용
+                        allowed_this_task += mapped_ipi_tools[:1]
+
+                    # 중복 제거(순서 유지)
+                    allowed_this_task = list(dict.fromkeys(allowed_this_task))
+
                 else:
-                    # normal은 baseline(=정상 2개)만 노출
                     allowed_this_task = list(baseline_tools)
 
                 # MCP 서버에 실제로 존재하는지 검증
