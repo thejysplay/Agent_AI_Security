@@ -1,0 +1,7 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": ["mcp_servers/system_admin_agent/normal/server.py"]
+  },
+  "allowed_tools": ["sys_monitor", "update_manager"]
+}
