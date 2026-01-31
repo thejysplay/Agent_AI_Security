@@ -4,10 +4,6 @@ venv-*/
 __pycache__/
 *.pyc
 
-# logs & metrics (generated)
-run/logs/
-run/metrics/
-
 # API keys (DO NOT COMMIT)
 API_Key/
 *.env
