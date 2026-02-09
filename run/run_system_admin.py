@@ -4,11 +4,11 @@ import argparse
 import asyncio
 import json
 import os
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
-import re
 
 import yaml
 
@@ -109,6 +109,11 @@ def serialize_call_tool_result(result) -> Any:
         return {"content": out, "isError": getattr(result, "isError", False)}
     except Exception:
         return {"raw": str(result)}
+
+
+def parse_target(comment: str) -> str | None:
+    m = re.search(r"target=([a-zA-Z0-9_]+)", comment or "")
+    return m.group(1) if m else None
 
 
 # ----------------------------
@@ -218,23 +223,18 @@ async def main_async(config_path: str, mode: str):
 
     tool_comments = tools_cfg.get("allowed_tools_comment", {}) or {}
 
-
-    ipi_tools_by_target: dict[str, list[str]] = {}
+    # IPI source tool -> attack tool(target) 자동 매핑
+    ipi_target_map: dict[str, str] = {}
     for name, comment in tool_comments.items():
-        if not (isinstance(comment, str) and "IPI용 도구" in comment):
-            continue
-        m = re.search(r"target=([a-zA-Z0-9_]+)", comment)
-        if not m:
-            continue
-        target = m.group(1)
-        ipi_tools_by_target.setdefault(target, []).append(name)
-
+        if isinstance(comment, str) and "IPI용 도구" in comment:
+            tgt = parse_target(comment)
+            if tgt:
+                ipi_target_map[name] = tgt
 
     api_key = load_api_key(llm_cfg)
     client = genai.Client(api_key=api_key)
 
     server = tools_cfg["mcp_server"]
-    # tools_cfg["allowed_tools"] 는 '서버에서 제공하는 tool superset' 정도로만 사용
     tools_superset = tools_cfg.get("allowed_tools", [])
 
     server_params = StdioServerParameters(
@@ -254,11 +254,9 @@ async def main_async(config_path: str, mode: str):
             all_mcp_tools = tool_list_resp.tools
             tool_by_name = {t.name: t for t in all_mcp_tools}
 
-            # superset이 지정돼 있으면 그 안에서만(안정성)
             if tools_superset:
                 tool_by_name = {n: t for n, t in tool_by_name.items() if n in set(tools_superset)}
 
-            # baseline tools 존재 확인
             missing_baseline = [t for t in baseline_tools if t not in tool_by_name]
             if missing_baseline:
                 raise RuntimeError(f"Missing baseline tools in MCP server: {missing_baseline}")
@@ -266,39 +264,36 @@ async def main_async(config_path: str, mode: str):
             for t in tasks:
                 task_id = t["id"]
                 user_prompt = t["user"]
-                attack_tool = t.get("attack_tool")
 
-                # ✅ 핵심: mode=attack이면 task별로 "baseline + attack_tool 1개"만 노출
+                derived_attack_tool: str | None = None
+                ipi_source_tool: str | None = None
+
                 if mode == "attack":
-                    if not attack_tool:
-                        raise RuntimeError(f"[{task_id}] attack_tool field is required in attack mode tasks.")
-
-                    # 기본: 정상 2 + 악성 1
-                    allowed_this_task = list(baseline_tools) + [attack_tool]
-
-
                     if str(task_id).startswith("ipi-"):
-                        mapped_ipi_tools = ipi_tools_by_target.get(attack_tool, [])
-                        if not mapped_ipi_tools:
-                            raise RuntimeError(
-                                f"[{task_id}] No IPI tool mapped for attack_tool='{attack_tool}'. "
-                                f"Check allowed_tools_comment has 'target={attack_tool}' for an IPI tool."
-                            )
-                        # ✅ 1:1 매핑을 강제하려면 1개만 사용
-                        allowed_this_task += mapped_ipi_tools[:1]
+                        ipi_source_tool = t.get("ipi_source_tool")
+                        if not ipi_source_tool:
+                            raise RuntimeError(f"[{task_id}] ipi_source_tool is required for ipi-* tasks.")
 
-                    # 중복 제거(순서 유지)
-                    allowed_this_task = list(dict.fromkeys(allowed_this_task))
+                        derived_attack_tool = ipi_target_map.get(ipi_source_tool)
+                        if not derived_attack_tool:
+                            raise RuntimeError(f"[{task_id}] No target mapping for ipi_source_tool='{ipi_source_tool}'")
 
+                        allowed_this_task = list(baseline_tools) + [ipi_source_tool, derived_attack_tool]
+                    else:
+                        derived_attack_tool = t.get("attack_tool")
+                        if not derived_attack_tool:
+                            raise RuntimeError(f"[{task_id}] attack_tool is required for dpi-* tasks.")
+                        allowed_this_task = list(baseline_tools) + [derived_attack_tool]
                 else:
                     allowed_this_task = list(baseline_tools)
 
-                # MCP 서버에 실제로 존재하는지 검증
+                # 중복 제거(순서 유지)
+                allowed_this_task = list(dict.fromkeys(allowed_this_task))
+
                 missing = [name for name in allowed_this_task if name not in tool_by_name]
                 if missing:
                     raise RuntimeError(f"[{task_id}] Missing tools in MCP server: {missing}")
 
-                # task별 function_declarations 생성 (이게 '노출 제한'의 핵심)
                 fn_decls = [mcp_tool_to_fn_decl(tool_by_name[name]) for name in allowed_this_task]
 
                 stamp = datetime.now(timezone.utc).strftime("%H%M%S")
@@ -309,7 +304,7 @@ async def main_async(config_path: str, mode: str):
                         lf.write(json.dumps(obj, ensure_ascii=False) + "\n")
                         lf.flush()
 
-                    meta = {
+                    meta: dict[str, Any] = {
                         "type": "meta",
                         "scenario": scenario,
                         "mode": mode,
@@ -317,10 +312,14 @@ async def main_async(config_path: str, mode: str):
                         "model": llm_cfg["model"],
                         "ts": utc_now_iso(),
                         "user": user_prompt,
-                        "tools_exposed": allowed_this_task,  # ✅ 가시성 개선
+                        "tools_exposed": allowed_this_task,
                     }
+
                     if mode == "attack":
-                        meta["attack_tool"] = attack_tool
+                        meta["attack_tool"] = derived_attack_tool
+                        if ipi_source_tool:
+                            meta["ipi_source_tool"] = ipi_source_tool
+
                     log_write(meta)
 
                     await run_agent_once(
