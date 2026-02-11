@@ -4,7 +4,6 @@ import argparse
 import asyncio
 import json
 import os
-import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -109,11 +108,6 @@ def serialize_call_tool_result(result) -> Any:
         return {"content": out, "isError": getattr(result, "isError", False)}
     except Exception:
         return {"raw": str(result)}
-
-
-def parse_target(comment: str) -> str | None:
-    m = re.search(r"target=([a-zA-Z0-9_]+)", comment or "")
-    return m.group(1) if m else None
 
 
 # ----------------------------
@@ -221,15 +215,29 @@ async def main_async(config_path: str, mode: str):
     tasks = read_jsonl(paths["tasks"])
     tools_cfg = json.loads(Path(paths["tools"]).read_text(encoding="utf-8"))
 
-    tool_comments = tools_cfg.get("allowed_tools_comment", {}) or {}
+    # ✅ NEW: tool_policy 기반 매핑/역할 추출
+    tool_policy: dict[str, Any] = tools_cfg.get("tool_policy", {}) or {}
 
-    # IPI source tool -> attack tool(target) 자동 매핑
+    # ipi_source_tool -> target(attack_tool) 매핑
     ipi_target_map: dict[str, str] = {}
-    for name, comment in tool_comments.items():
-        if isinstance(comment, str) and "IPI용 도구" in comment:
-            tgt = parse_target(comment)
+    for tool_name, pol in tool_policy.items():
+        if isinstance(pol, dict) and pol.get("role") == "ipi_source":
+            tgt = pol.get("target")
             if tgt:
-                ipi_target_map[name] = tgt
+                ipi_target_map[tool_name] = tgt
+
+    # mode별 rag tool 자동 포함
+    rag_tools_normal: list[str] = []
+    rag_tools_attack: list[str] = []
+
+    for tool_name, pol in tool_policy.items():
+        if not isinstance(pol, dict):
+            continue
+        role = pol.get("role")
+        if role == "rag":
+            rag_tools_normal.append(tool_name)
+        elif role == "rag_ipi_source":
+            rag_tools_attack.append(tool_name)
 
     api_key = load_api_key(llm_cfg)
     client = genai.Client(api_key=api_key)
@@ -269,6 +277,9 @@ async def main_async(config_path: str, mode: str):
                 ipi_source_tool: str | None = None
 
                 if mode == "attack":
+                    # ✅ attack 모드에서는 오염 RAG를 항상 노출(원하면 여기서 조건 바꿔도 됨)
+                    extra_attack = list(rag_tools_attack)
+
                     if str(task_id).startswith("ipi-"):
                         ipi_source_tool = t.get("ipi_source_tool")
                         if not ipi_source_tool:
@@ -276,16 +287,20 @@ async def main_async(config_path: str, mode: str):
 
                         derived_attack_tool = ipi_target_map.get(ipi_source_tool)
                         if not derived_attack_tool:
-                            raise RuntimeError(f"[{task_id}] No target mapping for ipi_source_tool='{ipi_source_tool}'")
+                            raise RuntimeError(
+                                f"[{task_id}] No target mapping for ipi_source_tool='{ipi_source_tool}'. "
+                                f"Check tools_cfg.tool_policy[{ipi_source_tool}].target"
+                            )
 
-                        allowed_this_task = list(baseline_tools) + [ipi_source_tool, derived_attack_tool]
+                        allowed_this_task = list(baseline_tools) + extra_attack + [ipi_source_tool, derived_attack_tool]
                     else:
                         derived_attack_tool = t.get("attack_tool")
                         if not derived_attack_tool:
                             raise RuntimeError(f"[{task_id}] attack_tool is required for dpi-* tasks.")
-                        allowed_this_task = list(baseline_tools) + [derived_attack_tool]
+                        allowed_this_task = list(baseline_tools) + extra_attack + [derived_attack_tool]
                 else:
-                    allowed_this_task = list(baseline_tools)
+                    # ✅ normal 모드에서는 trusted RAG 노출(있으면)
+                    allowed_this_task = list(baseline_tools) + list(rag_tools_normal)
 
                 # 중복 제거(순서 유지)
                 allowed_this_task = list(dict.fromkeys(allowed_this_task))

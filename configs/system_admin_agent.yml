@@ -1,9 +1,8 @@
 scenario: system_admin_agent
 
-# ✅ normal에서도 항상 열어둘 "정상 도구 2개"
 baseline_tools:
-  - sys_monitor
-  - update_manager
+  - system_resource_monitor
+  - patch_update_manager
 
 llm:
   provider: gemini
