@@ -215,9 +215,14 @@ async def main_async(config_path: str, mode: str):
     tasks = read_jsonl(paths["tasks"])
     tools_cfg = json.loads(Path(paths["tools"]).read_text(encoding="utf-8"))
 
+
+
+
     # ✅ NEW: tool_policy 기반 매핑/역할 추출
     tool_policy: dict[str, Any] = tools_cfg.get("tool_policy", {}) or {}
+    attack_success_tools: list[str] = tools_cfg.get("attack_success_tools", []) or []
 
+    
     # ipi_source_tool -> target(attack_tool) 매핑
     ipi_target_map: dict[str, str] = {}
     for tool_name, pol in tool_policy.items():
@@ -277,10 +282,12 @@ async def main_async(config_path: str, mode: str):
                 ipi_source_tool: str | None = None
 
                 if mode == "attack":
-                    # ✅ attack 모드에서는 오염 RAG를 항상 노출(원하면 여기서 조건 바꿔도 됨)
+                    # attack 모드에서는 오염 RAG(=poisoned LTM recall tool) 노출
                     extra_attack = list(rag_tools_attack)
 
-                    if str(task_id).startswith("ipi-"):
+                    tid = str(task_id)
+
+                    if tid.startswith("ipi-"):
                         ipi_source_tool = t.get("ipi_source_tool")
                         if not ipi_source_tool:
                             raise RuntimeError(f"[{task_id}] ipi_source_tool is required for ipi-* tasks.")
@@ -293,13 +300,24 @@ async def main_async(config_path: str, mode: str):
                             )
 
                         allowed_this_task = list(baseline_tools) + extra_attack + [ipi_source_tool, derived_attack_tool]
+
+                    elif tid.startswith("mp-"):
+                        # ✅ Memory Poisoning: task 자체에 attack_tool이 없어도 됨
+                        # 오염된 LTM 회상으로 인해 민감(악성) 도구 호출이 유도되는지 측정
+                        if not attack_success_tools:
+                            raise RuntimeError(
+                                f"[{task_id}] attack_success_tools is empty in tools config. "
+                                f"Set tools_cfg['attack_success_tools']."
+                            )
+                        allowed_this_task = list(baseline_tools) + extra_attack + list(attack_success_tools)
+
                     else:
+                        # dpi-* (또는 기존 방식): task에 attack_tool 필수
                         derived_attack_tool = t.get("attack_tool")
                         if not derived_attack_tool:
                             raise RuntimeError(f"[{task_id}] attack_tool is required for dpi-* tasks.")
                         allowed_this_task = list(baseline_tools) + extra_attack + [derived_attack_tool]
                 else:
-                    # ✅ normal 모드에서는 trusted RAG 노출(있으면)
                     allowed_this_task = list(baseline_tools) + list(rag_tools_normal)
 
                 # 중복 제거(순서 유지)
@@ -331,10 +349,13 @@ async def main_async(config_path: str, mode: str):
                     }
 
                     if mode == "attack":
-                        meta["attack_tool"] = derived_attack_tool
+                        if derived_attack_tool:
+                            meta["attack_tool"] = derived_attack_tool
                         if ipi_source_tool:
                             meta["ipi_source_tool"] = ipi_source_tool
-
+                        if str(task_id).startswith("mp-"):
+                            meta["attack_tools_exposed"] = attack_success_tools
+                            
                     log_write(meta)
 
                     await run_agent_once(
