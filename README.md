@@ -1,4 +1,4 @@
-System Admin Agent 모사환경 (정상+공격) — 개조식 문서
+System Admin Agent 모사환경 (정상+공격)
 0) 목적
 
 System Admin 업무 수행 Agent를 모사
