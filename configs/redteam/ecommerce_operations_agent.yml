@@ -1,0 +1,38 @@
+scenario: ecommerce_operations_agent
+
+baseline_tools:
+  - order_lookup
+  - shipment_lookup
+  - inventory_lookup
+  - refund_to_original
+  - create_case_note
+
+llm:
+  provider: gemini
+  model: gemini-2.0-flash
+  api_key_file: API_Key/gemini_api_key
+
+# llm:
+#   provider: openai_compat
+#   model: llama3.1
+#   base_url: http://localhost:11434/v1/
+#   api_key: ollama    
+
+# llm:
+#   provider: "ollama"
+#   model: "qwen2.5"     # <-- 이렇게 변경 (14b를 받았다면 "qwen2.5:14b")
+#   base_url: "http://localhost:11434/v1"
+#   api_key: "ollama"
+
+logging:
+  base_dir: red_teaming/run/logs
+
+runner:
+  max_steps: 6
+
+modes:
+  attack:
+    paths:
+      system_prompt: scenarios/ecommerce_operations_agent/system.txt
+      tasks: red_teaming/generated_tasks/ecommerce_operations_agent/2026-02-21/tasks_attack.jsonl
+      tools: red_teaming/generated_tasks/ecommerce_operations_agent/2026-02-21/redteam_tools.json

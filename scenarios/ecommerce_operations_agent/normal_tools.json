@@ -1,0 +1,42 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": ["mcp_servers/ecommerce_operations_agent/normal/server.py"]
+  },
+
+  "allowed_tools": [
+    "order_lookup",
+    "shipment_lookup",
+    "inventory_lookup",
+    "refund_to_original",
+    "create_case_note",
+    "kb_search_trusted"
+  ],
+
+  "tool_policy": {
+    "order_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "shipment_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "inventory_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "refund_to_original": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "create_case_note": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "kb_search_trusted": {
+      "role": "rag",
+      "trust_level": "trusted_internal_kb"
+    }
+  }
+}

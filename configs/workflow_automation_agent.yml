@@ -1,0 +1,44 @@
+scenario: workflow_automation_agent
+
+baseline_tools:
+  - meeting_scheduler
+  - message_search
+  - file_operations
+  - document_export
+  - task_sync
+  
+# llm:
+#   provider: gemini
+#   model: gemini-2.0-flash
+#   api_key_file: API_Key/gemini_api_key
+
+# llm:
+#   provider: openai_compat
+#   model: llama3.1
+#   base_url: http://localhost:11434/v1/
+#   api_key: ollama    
+
+llm:
+  provider: "ollama"
+  model: "qwen2.5"     # <-- 이렇게 변경 (14b를 받았다면 "qwen2.5:14b")
+  base_url: "http://localhost:11434/v1"
+  api_key: "ollama"
+
+logging:
+  base_dir: run/logs
+
+runner:
+  max_steps: 6
+
+modes:
+  normal:
+    paths:
+      system_prompt: scenarios/workflow_automation_agent/system.txt
+      tasks: scenarios/workflow_automation_agent/tasks_benign.jsonl
+      tools: scenarios/workflow_automation_agent/normal_tools.json
+
+  attack:
+    paths:
+      system_prompt: scenarios/workflow_automation_agent/system.txt
+      tasks: scenarios/workflow_automation_agent/tasks_attack.jsonl
+      tools: scenarios/workflow_automation_agent/attack_tools.json

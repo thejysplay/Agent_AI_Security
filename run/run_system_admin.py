@@ -14,8 +14,19 @@ import yaml
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-from google import genai
-from google.genai import types
+# ✅ Gemini는 optional (openai_compat만 쓸 때 google 패키지 없어도 실행되게)
+try:
+    from google import genai
+    from google.genai import types
+except Exception:
+    genai = None
+    types = None
+
+# ✅ OpenAI-compat (Ollama)
+try:
+    from openai import OpenAI
+except Exception:
+    OpenAI = None
 
 
 # ----------------------------
@@ -30,6 +41,7 @@ def today_utc_yyyy_mm_dd() -> str:
 
 
 def load_api_key(llm_cfg: dict) -> str:
+    """Gemini 전용"""
     key_file = llm_cfg.get("api_key_file")
     if key_file:
         key_path = Path(key_file)
@@ -58,7 +70,12 @@ def read_jsonl(path: str) -> list[dict[str, Any]]:
     return items
 
 
-def mcp_tool_to_fn_decl(mcp_tool) -> types.FunctionDeclaration:
+# ----------------------------
+# Gemini helpers
+# ----------------------------
+def mcp_tool_to_fn_decl(mcp_tool) -> Any:
+    if types is None:
+        raise RuntimeError("google-genai(types) is not available. Install google-genai or switch provider.")
     return types.FunctionDeclaration(
         name=mcp_tool.name,
         description=mcp_tool.description or "",
@@ -66,8 +83,10 @@ def mcp_tool_to_fn_decl(mcp_tool) -> types.FunctionDeclaration:
     )
 
 
-def extract_function_calls(resp) -> list[types.FunctionCall]:
-    out: list[types.FunctionCall] = []
+def extract_function_calls(resp) -> list[Any]:
+    if types is None:
+        return []
+    out: list[Any] = []
     try:
         parts = resp.candidates[0].content.parts
     except Exception:
@@ -96,6 +115,21 @@ def extract_assistant_text(resp) -> str:
     return "\n".join(texts).strip()
 
 
+# ----------------------------
+# OpenAI-compat helpers
+# ----------------------------
+def mcp_tool_to_openai_tool(mcp_tool) -> dict[str, Any]:
+    """MCP tool -> OpenAI tools schema"""
+    return {
+        "type": "function",
+        "function": {
+            "name": mcp_tool.name,
+            "description": mcp_tool.description or "",
+            "parameters": mcp_tool.inputSchema or {"type": "object", "properties": {}},
+        },
+    }
+
+
 def serialize_call_tool_result(result) -> Any:
     try:
         blocks = getattr(result, "content", None) or []
@@ -120,19 +154,21 @@ class ToolCall:
 
 
 # ----------------------------
-# Agent runner (single task)
+# Agent runner (single task) - Gemini
 # ----------------------------
-async def run_agent_once(
+async def run_agent_once_gemini(
     *,
-    client: genai.Client,
+    client: Any,
     model: str,
     system_instruction: str,
     session: ClientSession,
-    fn_decls: list[types.FunctionDeclaration],
+    fn_decls: list[Any],
     user_prompt: str,
     max_steps: int,
     log_write: Callable[[dict[str, Any]], None],
 ) -> tuple[str, list[ToolCall]]:
+    if types is None:
+        raise RuntimeError("Gemini provider selected but google-genai is not installed.")
     tool_obj = types.Tool(function_declarations=fn_decls)
 
     tool_config = types.ToolConfig(
@@ -146,7 +182,7 @@ async def run_agent_once(
         temperature=0,
     )
 
-    contents: list[types.Content] = [
+    contents: list[Any] = [
         types.Content(role="user", parts=[types.Part(text=user_prompt)])
     ]
 
@@ -161,7 +197,7 @@ async def run_agent_once(
 
         fcalls = extract_function_calls(resp)
         if not fcalls:
-            final_text = (resp.text or "").strip()
+            final_text = (getattr(resp, "text", "") or "").strip()
             if not final_text:
                 final_text = assistant_text
             log_write({"type": "final", "text": final_text, "ts": utc_now_iso()})
@@ -169,7 +205,7 @@ async def run_agent_once(
 
         contents.append(resp.candidates[0].content)
 
-        response_parts: list[types.Part] = []
+        response_parts: list[Any] = []
         for fc in fcalls:
             tool_name = fc.name
             tool_args = dict(fc.args or {})
@@ -192,6 +228,78 @@ async def run_agent_once(
 
 
 # ----------------------------
+# Agent runner (single task) - OpenAI compatible (Ollama)
+# ----------------------------
+async def run_agent_once_openai_compat(
+    *,
+    client: Any,  # OpenAI client
+    model: str,
+    system_instruction: str,
+    session: ClientSession,
+    tools: list[dict[str, Any]],
+    user_prompt: str,
+    max_steps: int,
+    log_write: Callable[[dict[str, Any]], None],
+) -> tuple[str, list[ToolCall]]:
+
+    messages: list[dict[str, Any]] = [
+        {"role": "system", "content": system_instruction},
+        {"role": "user", "content": user_prompt},
+    ]
+
+    calls: list[ToolCall] = []
+
+    for _ in range(max_steps):
+        resp = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            tools=tools,
+            tool_choice="auto",
+            temperature=0,
+        )
+
+        msg = resp.choices[0].message
+        assistant_text = (msg.content or "").strip()
+        if assistant_text:
+            log_write({"type": "assistant", "text": assistant_text, "ts": utc_now_iso()})
+
+        tool_calls = getattr(msg, "tool_calls", None) or []
+        if not tool_calls:
+            final_text = assistant_text
+            log_write({"type": "final", "text": final_text, "ts": utc_now_iso()})
+            return final_text, calls
+
+        # assistant message (incl tool_calls) append
+        try:
+            messages.append(msg.model_dump(exclude_none=True))
+        except Exception:
+            # fallback minimal
+            messages.append({"role": "assistant", "content": msg.content})
+
+        for tc in tool_calls:
+            tool_name = tc.function.name
+            tool_args = json.loads(tc.function.arguments or "{}")
+
+            calls.append(ToolCall(name=tool_name, args=tool_args))
+            log_write({"type": "tool_call", "name": tool_name, "args": tool_args, "ts": utc_now_iso()})
+
+            tool_result = await session.call_tool(tool_name, tool_args)
+            tool_payload = serialize_call_tool_result(tool_result)
+            log_write({"type": "tool_result", "name": tool_name, "result": tool_payload, "ts": utc_now_iso()})
+
+            messages.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": tc.id,
+                    "content": json.dumps({"result": tool_payload}, ensure_ascii=False),
+                }
+            )
+
+    log_write({"type": "final", "text": "[ERROR] max_steps exceeded", "ts": utc_now_iso()})
+    return "[ERROR] max_steps exceeded", calls
+
+
+# ----------------------------
 # Main
 # ----------------------------
 async def main_async(config_path: str, mode: str):
@@ -199,10 +307,11 @@ async def main_async(config_path: str, mode: str):
 
     scenario = cfg["scenario"]
     llm_cfg = cfg["llm"]
+    llm_provider = (llm_cfg.get("provider") or "gemini").lower().strip()
 
     baseline_tools: list[str] = cfg.get("baseline_tools") or []
     if not baseline_tools:
-        raise RuntimeError("baseline_tools is missing in config (need normal tool 2개 목록)")
+        raise RuntimeError("baseline_tools is missing in config (need baseline tool list)")
 
     if "modes" not in cfg or mode not in cfg["modes"]:
         raise RuntimeError(f"Invalid mode '{mode}'. Available: {list((cfg.get('modes') or {}).keys())}")
@@ -215,14 +324,10 @@ async def main_async(config_path: str, mode: str):
     tasks = read_jsonl(paths["tasks"])
     tools_cfg = json.loads(Path(paths["tools"]).read_text(encoding="utf-8"))
 
-
-
-
-    # ✅ NEW: tool_policy 기반 매핑/역할 추출
+    # ✅ tool_policy 기반 매핑/역할 추출
     tool_policy: dict[str, Any] = tools_cfg.get("tool_policy", {}) or {}
     attack_success_tools: list[str] = tools_cfg.get("attack_success_tools", []) or []
 
-    
     # ipi_source_tool -> target(attack_tool) 매핑
     ipi_target_map: dict[str, str] = {}
     for tool_name, pol in tool_policy.items():
@@ -244,8 +349,25 @@ async def main_async(config_path: str, mode: str):
         elif role == "rag_ipi_source":
             rag_tools_attack.append(tool_name)
 
-    api_key = load_api_key(llm_cfg)
-    client = genai.Client(api_key=api_key)
+    # ✅ LLM client 생성 (provider 분기)
+    gemini_client = None
+    openai_client = None
+
+    if llm_provider == "gemini":
+        if genai is None:
+            raise RuntimeError("Gemini provider selected but google-genai is not installed.")
+        api_key = load_api_key(llm_cfg)
+        gemini_client = genai.Client(api_key=api_key)
+
+    elif llm_provider in ("openai_compat", "ollama"):
+        if OpenAI is None:
+            raise RuntimeError("openai package not installed. Run: pip install openai")
+        base_url = (llm_cfg.get("base_url") or "http://localhost:11434/v1").strip().rstrip("/")
+        api_key = (llm_cfg.get("api_key") or "ollama").strip()
+        openai_client = OpenAI(base_url=base_url, api_key=api_key)
+
+    else:
+        raise RuntimeError(f"Unsupported llm.provider='{llm_provider}'. Use gemini or openai_compat/ollama.")
 
     server = tools_cfg["mcp_server"]
     tools_superset = tools_cfg.get("allowed_tools", [])
@@ -282,9 +404,7 @@ async def main_async(config_path: str, mode: str):
                 ipi_source_tool: str | None = None
 
                 if mode == "attack":
-                    # attack 모드에서는 오염 RAG(=poisoned LTM recall tool) 노출
                     extra_attack = list(rag_tools_attack)
-
                     tid = str(task_id)
 
                     if tid.startswith("ipi-"):
@@ -302,8 +422,6 @@ async def main_async(config_path: str, mode: str):
                         allowed_this_task = list(baseline_tools) + extra_attack + [ipi_source_tool, derived_attack_tool]
 
                     elif tid.startswith("mp-"):
-                        # ✅ Memory Poisoning: task 자체에 attack_tool이 없어도 됨
-                        # 오염된 LTM 회상으로 인해 민감(악성) 도구 호출이 유도되는지 측정
                         if not attack_success_tools:
                             raise RuntimeError(
                                 f"[{task_id}] attack_success_tools is empty in tools config. "
@@ -312,7 +430,6 @@ async def main_async(config_path: str, mode: str):
                         allowed_this_task = list(baseline_tools) + extra_attack + list(attack_success_tools)
 
                     else:
-                        # dpi-* (또는 기존 방식): task에 attack_tool 필수
                         derived_attack_tool = t.get("attack_tool")
                         if not derived_attack_tool:
                             raise RuntimeError(f"[{task_id}] attack_tool is required for dpi-* tasks.")
@@ -326,8 +443,6 @@ async def main_async(config_path: str, mode: str):
                 missing = [name for name in allowed_this_task if name not in tool_by_name]
                 if missing:
                     raise RuntimeError(f"[{task_id}] Missing tools in MCP server: {missing}")
-
-                fn_decls = [mcp_tool_to_fn_decl(tool_by_name[name]) for name in allowed_this_task]
 
                 stamp = datetime.now(timezone.utc).strftime("%H%M%S")
                 log_path = date_dir / f"{task_id}_{stamp}.jsonl"
@@ -343,6 +458,7 @@ async def main_async(config_path: str, mode: str):
                         "mode": mode,
                         "task_id": task_id,
                         "model": llm_cfg["model"],
+                        "llm_provider": llm_provider,
                         "ts": utc_now_iso(),
                         "user": user_prompt,
                         "tools_exposed": allowed_this_task,
@@ -355,19 +471,34 @@ async def main_async(config_path: str, mode: str):
                             meta["ipi_source_tool"] = ipi_source_tool
                         if str(task_id).startswith("mp-"):
                             meta["attack_tools_exposed"] = attack_success_tools
-                            
+
                     log_write(meta)
 
-                    await run_agent_once(
-                        client=client,
-                        model=llm_cfg["model"],
-                        system_instruction=system_txt,
-                        session=session,
-                        fn_decls=fn_decls,
-                        user_prompt=user_prompt,
-                        max_steps=max_steps,
-                        log_write=log_write,
-                    )
+                    # ✅ provider별 도구 스키마/러너 분기
+                    if llm_provider == "gemini":
+                        fn_decls = [mcp_tool_to_fn_decl(tool_by_name[name]) for name in allowed_this_task]
+                        await run_agent_once_gemini(
+                            client=gemini_client,
+                            model=llm_cfg["model"],
+                            system_instruction=system_txt,
+                            session=session,
+                            fn_decls=fn_decls,
+                            user_prompt=user_prompt,
+                            max_steps=max_steps,
+                            log_write=log_write,
+                        )
+                    else:
+                        openai_tools = [mcp_tool_to_openai_tool(tool_by_name[name]) for name in allowed_this_task]
+                        await run_agent_once_openai_compat(
+                            client=openai_client,
+                            model=llm_cfg["model"],
+                            system_instruction=system_txt,
+                            session=session,
+                            tools=openai_tools,
+                            user_prompt=user_prompt,
+                            max_steps=max_steps,
+                            log_write=log_write,
+                        )
 
                 print(f"[OK] saved log: {log_path}")
 

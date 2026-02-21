@@ -1,0 +1,27 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": ["mcp_servers/system_admin_agent/normal/server.py"]
+  },
+
+  "allowed_tools": [
+    "system_resource_monitor",
+    "patch_update_manager",
+    "kb_search_trusted"
+  ],
+
+  "tool_policy": {
+    "system_resource_monitor": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "patch_update_manager": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "kb_search_trusted": {
+      "role": "rag",
+      "trust_level": "trusted_internal_kb"
+    }
+  }
+}

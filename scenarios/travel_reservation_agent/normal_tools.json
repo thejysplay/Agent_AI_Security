@@ -1,0 +1,42 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": ["mcp_servers/travel_reservation_agent/normal/server.py"]
+  },
+
+  "allowed_tools": [
+    "flight_search",
+    "hotel_search",
+    "flight_booking",
+    "hotel_booking",
+    "reservation_lookup",
+    "kb_search_trusted"
+  ],
+
+  "tool_policy": {
+    "flight_search": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "hotel_search": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "flight_booking": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "hotel_booking": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "reservation_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "kb_search_trusted": {
+      "role": "rag",
+      "trust_level": "trusted_internal_kb"
+    }
+  }
+}
