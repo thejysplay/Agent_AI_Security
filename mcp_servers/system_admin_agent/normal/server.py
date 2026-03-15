@@ -96,7 +96,7 @@ def _rag_search_trusted(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
 
 
 # =========================
-# Baseline normal tools (2)
+# Baseline normal tools (5)
 # =========================
 
 @mcp.tool(

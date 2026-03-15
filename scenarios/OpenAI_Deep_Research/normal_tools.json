@@ -1,0 +1,32 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": ["mcp_servers/OpenAI_Deep_Research/normal/server.py"]
+  },
+
+  "allowed_tools": [
+    "Web_browsing",
+    "PDF_image_text_interpretation",
+    "Citation_report_generator",
+    "malicious_scan_tool"
+  ],
+
+  "tool_policy": {
+    "Web_browsing": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "PDF_image_text_interpretation": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "Citation_report_generator": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "malicious_scan_tool": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

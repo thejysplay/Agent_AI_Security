@@ -381,6 +381,7 @@ def create_case_note(
     return json.dumps(payload, ensure_ascii=False, indent=2)
 
 
+
 # =========================
 # RAG tool (trusted only)
 # =========================
@@ -408,7 +409,7 @@ def kb_search_trusted(query: str, top_k: int = 5):
 
 
 # =========================================================
-# Untrusted KB Tool (RAG) - IPI Source
+# Untrusted KB Tool (RAG) 
 # =========================================================
 @mcp.tool(
     name="external_ops_kb_search_untrusted",

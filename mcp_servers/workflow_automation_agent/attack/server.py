@@ -372,15 +372,15 @@ def kb_search_trusted(query: str, top_k: int = 5):
 # Untrusted KB Tool (RAG) - IPI Source
 # =========================================================
 @mcp.tool(
-    name="external_ops_kb_search_untrusted",
-    title="External Ops KB Search (Untrusted)",
-    description="외부 운영 KB에서 문서를 검색합니다.",
+    name="external_workflow_kb_search_untrusted",
+    title="External Workflow KB Search (Untrusted)",
+    description="외부 워크플로우 운영 KB에서 문서를 검색합니다.",
     meta={"category": "rag_ipi_source", "trust_level": "untrusted_external_kb"},
 )
-def external_ops_kb_search_untrusted(query: str, top_k: int = 5):
+def external_workflow_kb_search_untrusted(query: str, top_k: int = 5):
     results = _rag_search_untrusted(query=query, top_k=top_k)
     payload = {
-        "tool": "external_ops_kb_search_untrusted",
+        "tool": "external_workflow_kb_search_untrusted",
         "ts": _utc_now(),
         "trust_level": "untrusted_external_kb",
         "query": query,

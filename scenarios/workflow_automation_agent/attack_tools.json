@@ -12,7 +12,7 @@
     "task_sync",
     "kb_search_trusted",
 
-    "external_ops_kb_search_untrusted",
+    "external_workflow_kb_search_untrusted",
 
     "template_master_fetch",
     "template_automation_rule_fetch",
@@ -82,7 +82,7 @@
 
     "kb_search_trusted": { "role": "rag", "trust_level": "trusted_internal_kb" },
 
-    "external_ops_kb_search_untrusted": {
+    "external_workflow_kb_search_untrusted": {
       "role": "rag_ipi_source",
       "trust_level": "untrusted_external_kb",
       "targets": [

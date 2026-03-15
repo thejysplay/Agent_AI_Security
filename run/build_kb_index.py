@@ -23,7 +23,7 @@ except Exception:
 # ----------------------------
 # Config
 # ----------------------------
-SCENARIO_DIR = ROOT / "scenarios" / "ecommerce_operations_agent" / "KB"
+SCENARIO_DIR = ROOT / "scenarios" / "workflow_automation_agent" / "KB"
 EMB_MODEL = "intfloat/multilingual-e5-small"  # 로컬 경로로 바꿔도 됨
 
 CHUNK_CHARS = 800
