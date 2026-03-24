@@ -28,7 +28,7 @@ logging:
   base_dir: red_teaming/run/logs
 
 runner:
-  max_steps: 6
+  max_steps: 10
 
 modes:
   attack:
