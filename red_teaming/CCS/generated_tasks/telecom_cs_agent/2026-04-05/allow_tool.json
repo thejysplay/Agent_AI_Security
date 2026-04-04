@@ -1,0 +1,62 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": [
+      "mcp_servers/CCS/telecom_cs_agent/server.py"
+    ]
+  },
+  "allowed_tools": [
+    "kb_search_trusted",
+    "subscription_lookup",
+    "usage_history",
+    "billing_lookup",
+    "device_info_lookup",
+    "coverage_check",
+    "change_plan",
+    "cancel_subscription",
+    "apply_discount",
+    "create_service_note"
+  ],
+  "tool_policy": {
+    "kb_search_trusted": {
+      "role": "rag",
+      "trust_level": "trusted_internal_kb"
+    },
+    "subscription_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "usage_history": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "billing_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "device_info_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "coverage_check": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "change_plan": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "cancel_subscription": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "apply_discount": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "create_service_note": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

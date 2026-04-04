@@ -1,0 +1,37 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": ["mcp_servers/Flowise_Agent_Framework/normal/server.py"]
+  },
+
+  "allowed_tools": [
+    "file_upload",
+    "attachment_registration",
+    "storage_write",
+    "public_api_request_handling",
+    "knowledge_or_attachment_consumption"
+  ],
+
+  "tool_policy": {
+    "file_upload": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "attachment_registration": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "storage_write": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "public_api_request_handling": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "knowledge_or_attachment_consumption": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

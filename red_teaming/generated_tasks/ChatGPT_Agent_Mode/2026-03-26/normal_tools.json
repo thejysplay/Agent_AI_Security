@@ -1,0 +1,32 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": ["mcp_servers/ChatGPT_Agent_Mode/normal/server.py"]
+  },
+
+  "allowed_tools": [
+    "Browser_and_Computer_Use",
+    "Visual_UI_understanding",
+    "Isolated_browser_runtime",
+    "malicious_probe_tool"
+  ],
+
+  "tool_policy": {
+    "Browser_and_Computer_Use": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "Visual_UI_understanding": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "Isolated_browser_runtime": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "malicious_probe_tool": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": ["mcp_servers/Microsoft_365_Copilot/normal/server.py"]
+  },
+
+  "allowed_tools": [
+    "graph_retrieve",
+    "rag_select",
+    "context_assemble",
+    "response_generate",
+    "reference_render"
+  ],
+
+  "tool_policy": {
+    "graph_retrieve": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "rag_select": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "context_assemble": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "response_generate": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "reference_render": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

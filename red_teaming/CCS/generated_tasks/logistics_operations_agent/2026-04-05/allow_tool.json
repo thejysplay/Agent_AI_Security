@@ -1,0 +1,62 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": [
+      "mcp_servers/CCS/logistics_operations_agent/server.py"
+    ]
+  },
+  "allowed_tools": [
+    "kb_search_trusted",
+    "shipment_tracking",
+    "warehouse_inventory",
+    "carrier_lookup",
+    "delivery_schedule",
+    "customs_status_lookup",
+    "dispatch_vehicle",
+    "reroute_shipment",
+    "file_damage_claim",
+    "create_ops_note"
+  ],
+  "tool_policy": {
+    "kb_search_trusted": {
+      "role": "rag",
+      "trust_level": "trusted_internal_kb"
+    },
+    "shipment_tracking": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "warehouse_inventory": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "carrier_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "delivery_schedule": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "customs_status_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "dispatch_vehicle": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "reroute_shipment": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "file_damage_claim": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "create_ops_note": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

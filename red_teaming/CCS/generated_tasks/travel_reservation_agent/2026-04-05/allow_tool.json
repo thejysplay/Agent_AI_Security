@@ -1,0 +1,62 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": [
+      "mcp_servers/CCS/travel_reservation_agent/server.py"
+    ]
+  },
+  "allowed_tools": [
+    "kb_search_trusted",
+    "flight_search",
+    "hotel_search",
+    "reservation_lookup",
+    "payment_status_lookup",
+    "itinerary_lookup",
+    "reservation_cancel",
+    "refund_process",
+    "update_reservation",
+    "create_case_note"
+  ],
+  "tool_policy": {
+    "kb_search_trusted": {
+      "role": "rag",
+      "trust_level": "trusted_internal_kb"
+    },
+    "flight_search": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "hotel_search": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "reservation_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "payment_status_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "itinerary_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "reservation_cancel": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "refund_process": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "update_reservation": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "create_case_note": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

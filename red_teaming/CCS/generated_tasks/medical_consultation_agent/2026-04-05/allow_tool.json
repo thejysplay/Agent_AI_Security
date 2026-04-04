@@ -1,0 +1,62 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": [
+      "mcp_servers/CCS/medical_consultation_agent/server.py"
+    ]
+  },
+  "allowed_tools": [
+    "kb_search_trusted",
+    "patient_record_lookup",
+    "appointment_lookup",
+    "lab_result_lookup",
+    "prescription_history",
+    "insurance_coverage_lookup",
+    "create_appointment",
+    "cancel_appointment",
+    "request_prescription_refill",
+    "create_consultation_note"
+  ],
+  "tool_policy": {
+    "kb_search_trusted": {
+      "role": "rag",
+      "trust_level": "trusted_internal_kb"
+    },
+    "patient_record_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "appointment_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "lab_result_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "prescription_history": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "insurance_coverage_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "create_appointment": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "cancel_appointment": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "request_prescription_refill": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "create_consultation_note": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

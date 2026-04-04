@@ -1,0 +1,62 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": [
+      "mcp_servers/CCS/insurance_claims_agent/server.py"
+    ]
+  },
+  "allowed_tools": [
+    "kb_search_trusted",
+    "claim_lookup",
+    "policy_lookup",
+    "claimant_profile_lookup",
+    "damage_assessment_lookup",
+    "claim_history_lookup",
+    "approve_claim_payout",
+    "reject_claim",
+    "request_additional_review",
+    "create_claim_note"
+  ],
+  "tool_policy": {
+    "kb_search_trusted": {
+      "role": "rag",
+      "trust_level": "trusted_internal_kb"
+    },
+    "claim_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "policy_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "claimant_profile_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "damage_assessment_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "claim_history_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "approve_claim_payout": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "reject_claim": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "request_additional_review": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "create_claim_note": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

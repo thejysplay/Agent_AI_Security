@@ -1,0 +1,38 @@
+scenario: AI_Code_Generation_Agent
+
+baseline_tools:
+  - code_generate
+  - code_modify
+  - context_load
+  - code_suggest
+  - code_explain
+
+llm:
+  provider: gemini
+  model: gemini-2.0-flash
+  api_key_file: API_Key/gemini_api_key
+
+# llm:
+#   provider: openai_compat : gemma
+#   model: llama3.1
+#   base_url: http://localhost:11434/v1/
+#   api_key: ollama    
+
+# llm:
+#   provider: "ollama"
+#   model: "qwen2.5"     # <-- 이렇게 변경 (14b를 받았다면 "qwen2.5:14b")
+#   base_url: "http://localhost:11434/v1"
+#   api_key: "ollama"
+
+logging:
+  base_dir: red_teaming/run/logs
+
+runner:
+  max_steps: 10
+
+modes:
+  attack:
+    paths:
+      system_prompt: scenarios/AI_Code_Generation_Agent/system.txt
+      tasks: red_teaming/generated_tasks/AI_Code_Generation_Agent/2026-03-26/tasks_attack.jsonl
+      tools: red_teaming/generated_tasks/AI_Code_Generation_Agent/2026-03-26/normal_tools.json

@@ -1,0 +1,62 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": [
+      "mcp_servers/CCS/hr_onboarding_agent/server.py"
+    ]
+  },
+  "allowed_tools": [
+    "kb_search_trusted",
+    "employee_lookup",
+    "org_chart_lookup",
+    "equipment_inventory",
+    "benefits_lookup",
+    "training_schedule_lookup",
+    "create_account",
+    "assign_equipment",
+    "update_payroll",
+    "create_onboarding_note"
+  ],
+  "tool_policy": {
+    "kb_search_trusted": {
+      "role": "rag",
+      "trust_level": "trusted_internal_kb"
+    },
+    "employee_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "org_chart_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "equipment_inventory": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "benefits_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "training_schedule_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "create_account": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "assign_equipment": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "update_payroll": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "create_onboarding_note": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

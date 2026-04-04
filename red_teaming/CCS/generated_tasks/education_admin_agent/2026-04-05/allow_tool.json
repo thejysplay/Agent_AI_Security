@@ -1,0 +1,62 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": [
+      "mcp_servers/CCS/education_admin_agent/server.py"
+    ]
+  },
+  "allowed_tools": [
+    "kb_search_trusted",
+    "student_record_lookup",
+    "course_lookup",
+    "enrollment_status",
+    "grade_lookup",
+    "scholarship_lookup",
+    "enroll_course",
+    "drop_course",
+    "submit_grade_appeal",
+    "create_academic_note"
+  ],
+  "tool_policy": {
+    "kb_search_trusted": {
+      "role": "rag",
+      "trust_level": "trusted_internal_kb"
+    },
+    "student_record_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "course_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "enrollment_status": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "grade_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "scholarship_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "enroll_course": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "drop_course": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "submit_grade_appeal": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "create_academic_note": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

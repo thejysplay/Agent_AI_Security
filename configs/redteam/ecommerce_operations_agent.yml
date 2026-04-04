@@ -6,6 +6,7 @@ baseline_tools:
   - inventory_lookup
   - refund_to_original
   - create_case_note
+  - kb_search_trusted
 
 llm:
   provider: gemini
@@ -28,11 +29,11 @@ logging:
   base_dir: red_teaming/run/logs
 
 runner:
-  max_steps: 6
+  max_steps: 10
 
 modes:
   attack:
     paths:
       system_prompt: scenarios/ecommerce_operations_agent/system.txt
-      tasks: red_teaming/generated_tasks/ecommerce_operations_agent/2026-02-21/tasks_attack.jsonl
-      tools: red_teaming/generated_tasks/ecommerce_operations_agent/2026-02-21/redteam_tools.json
+      tasks: red_teaming/generated_tasks/ecommerce_operations_agent/2026-04-05/tasks_attack.jsonl
+      tools: red_teaming/generated_tasks/ecommerce_operations_agent/2026-04-05/redteam_tools.json

@@ -505,8 +505,8 @@ async def main_async(config_path: str, mode: str):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--config", default="configs/redteam/travel_reservation_agent.yml")
-    ap.add_argument("--mode", choices=["normal", "attack"], default="normal")
+    ap.add_argument("--config", default="configs/travel_reservation_agent.yml")
+    ap.add_argument("--mode", choices=["normal", "attack"], default="attack")
     args = ap.parse_args()
     asyncio.run(main_async(args.config, args.mode))
 

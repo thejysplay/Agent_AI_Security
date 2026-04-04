@@ -1,0 +1,62 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": [
+      "mcp_servers/CCS/government_service_agent/server.py"
+    ]
+  },
+  "allowed_tools": [
+    "kb_search_trusted",
+    "citizen_record_lookup",
+    "application_status_lookup",
+    "document_history",
+    "eligibility_check",
+    "fee_payment_lookup",
+    "issue_certificate",
+    "update_citizen_info",
+    "submit_application",
+    "create_service_note"
+  ],
+  "tool_policy": {
+    "kb_search_trusted": {
+      "role": "rag",
+      "trust_level": "trusted_internal_kb"
+    },
+    "citizen_record_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "application_status_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "document_history": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "eligibility_check": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "fee_payment_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "issue_certificate": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "update_citizen_info": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "submit_application": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "create_service_note": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

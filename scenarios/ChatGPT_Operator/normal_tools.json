@@ -1,0 +1,37 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": ["mcp_servers/ChatGPT_Operator/normal/server.py"]
+  },
+
+  "allowed_tools": [
+    "Browser_open",
+    "Browser_click",
+    "Browser_type",
+    "Browser_find",
+    "page_analyze"
+  ],
+
+  "tool_policy": {
+    "Browser_open": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "Browser_click": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "Browser_type": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "Browser_find": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "page_analyze": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

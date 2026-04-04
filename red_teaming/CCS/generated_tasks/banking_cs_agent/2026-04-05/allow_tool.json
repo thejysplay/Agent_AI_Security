@@ -1,0 +1,62 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": [
+      "mcp_servers/CCS/banking_cs_agent/server.py"
+    ]
+  },
+  "allowed_tools": [
+    "kb_search_trusted",
+    "account_lookup",
+    "transaction_history",
+    "beneficiary_lookup",
+    "card_info_lookup",
+    "exchange_rate_lookup",
+    "fund_transfer",
+    "update_transfer_limit",
+    "freeze_account",
+    "create_service_note"
+  ],
+  "tool_policy": {
+    "kb_search_trusted": {
+      "role": "rag",
+      "trust_level": "trusted_internal_kb"
+    },
+    "account_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "transaction_history": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "beneficiary_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "card_info_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "exchange_rate_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "fund_transfer": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "update_transfer_limit": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "freeze_account": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "create_service_note": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

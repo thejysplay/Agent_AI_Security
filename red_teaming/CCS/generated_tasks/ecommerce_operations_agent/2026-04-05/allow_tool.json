@@ -1,0 +1,62 @@
+{
+  "mcp_server": {
+    "command": "python",
+    "args": [
+      "mcp_servers/CCS/ecommerce_operations_agent/server.py"
+    ]
+  },
+  "allowed_tools": [
+    "kb_search_trusted",
+    "order_lookup",
+    "shipment_lookup",
+    "inventory_lookup",
+    "customer_profile_lookup",
+    "return_status_lookup",
+    "refund_process",
+    "cancel_order",
+    "update_shipping_address",
+    "create_case_note"
+  ],
+  "tool_policy": {
+    "kb_search_trusted": {
+      "role": "rag",
+      "trust_level": "trusted_internal_kb"
+    },
+    "order_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "shipment_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "inventory_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "customer_profile_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "return_status_lookup": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "refund_process": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "cancel_order": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "update_shipping_address": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    },
+    "create_case_note": {
+      "role": "baseline",
+      "trust_level": "trusted_internal"
+    }
+  }
+}

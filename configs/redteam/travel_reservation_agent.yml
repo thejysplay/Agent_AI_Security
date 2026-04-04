@@ -6,7 +6,12 @@ baseline_tools:
   - flight_booking
   - hotel_booking
   - reservation_lookup
-
+  - payment_status_lookup
+  - traveler_profile_lookup
+  - itinerary_lookup
+  - reservation_cancel
+  - refund_process
+  - create_case_note
 llm:
   provider: gemini
   model: gemini-2.0-flash
@@ -34,5 +39,5 @@ modes:
   attack:
     paths:
       system_prompt: scenarios/travel_reservation_agent/system.txt
-      tasks: red_teaming/generated_tasks/travel_reservation_agent/2026-03-12/tasks_attack.jsonl
-      tools: red_teaming/generated_tasks/travel_reservation_agent/2026-03-12/redteam_tools.json
+      tasks: red_teaming/generated_tasks/travel_reservation_agent/2026-04-05/tasks_attack.jsonl
+      tools: red_teaming/generated_tasks/travel_reservation_agent/2026-04-05/redteam_tools.json
